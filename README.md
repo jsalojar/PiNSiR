@@ -74,13 +74,14 @@ Collect the .bam files of the outgroup individuals into a text file, say ancs.tx
 How to get SFS:
 
 angsd -vcf-pl my.vcf.gz -doSaf 1 -anc ANCESTOR.fasta.fa.gz -out angsd.out
-/opt/angsd/misc/realSFS angsd.out.saf.idx -P 12 > angsd.out.saf.sfs
+
+realSFS angsd.out.saf.idx -P 12 > angsd.out.saf.sfs
 
 Then calculate site-wise pi:
 
-/opt/angsd/misc/realSFS saf2theta angsd.out.saf.idx -sfs angsd.out.saf.sfs -outname angsd.out.theta
+realSFS saf2theta angsd.out.saf.idx -sfs angsd.out.saf.sfs -outname angsd.out.theta
 
-/opt/angsd/misc/thetaStat print angsd.out.theta.thetas.idx > angsd.out.theta.thetas.txt
+thetaStat print angsd.out.theta.thetas.idx > angsd.out.theta.thetas.txt
 
 To save space you can zip it:
 
@@ -109,10 +110,12 @@ TH=read.delim("Arabica_sgC.NoRep.wild.theta.thetas.txt.gz",as.is=T)
 #Pi_N
 #nSNP=read.table("Arabica_sgC.filtered.all.exons.wild.snp.count")[,1]*2/3
 #Pi_0=Pi_N.par(TH,gene.coord$HQ,zerofold.pos,nSNP)
+
 Pi_0=Pi_N.par(TH,gene.coord$HQ,zerofold.pos)
 
 #Calculate Pi_S
 #Pi_S
 #nSNP=read.table("Arabica_sgC.filtered.all.intergenic.wild.snp.count")[,1]
 #Pi_int=Pi_S.par(TH,gene.coord$ALL,nSNP)
+
 Pi_int=Pi_S.par(TH,gene.coord$ALL)
