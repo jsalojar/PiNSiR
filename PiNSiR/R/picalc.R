@@ -11,7 +11,7 @@ filter.ninth=function(x,ID="Parent"){
 #' @export
 filter.hq.genes=function(gff.file,peptide.fasta,bed=F){
 
-  gff=read.delim(gff.file,comment.char="#",header=F)
+  gff=read.delim(gff.file,comment.char="#",header=F,as.is=T)
   gff=gff[gff[,3]=="exon",c(1,4,5,9)]
   #Prepare a gff file with exons, 4th column is the parent gene ID.
   gff[,4]=filter.ninth(gff[,4])
