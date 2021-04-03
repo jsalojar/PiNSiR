@@ -74,8 +74,10 @@ Pi_N.par=function(TH, exon.sel, exon.mut,nSNP=NA,cores=15){
   message("Calculating Pi_N - parallel")
   TH.split=split(TH,TH[,1])
   exon.mut.list=split(exon.mut,exon.mut[,1])
+  exon.mut.list=exon.mut.list[names(TH.split)]
   exon.sel.list=split(exon.sel,exon.sel[,1])
-  contig.pi=parallel::mcmapply(contig.Pin,TH.split,exon.sel.list,exon.mut.list,mc.cores=cores)
+  exon.sel.list=exon.sel.list[names(TH.split)]
+  contig.pi=parallel::mcmapply(contig.Pin,TH.split,exon.sel.list,exon.mut.list,mc.cores=min(cores,length(TH.split)))
   if (is.na(nSNP)){
      res=list(Pi=sum(unlist(contig.pi["sum.theta",]))/sum(unlist(contig.pi["N",])),chrom.sum=contig.pi["sum.theta",],chrom.N=contig.pi["N",])
      message("The number of called nucleotides is not known - now using total exon length")
@@ -115,7 +117,7 @@ pi.sum=function(x,b){
     b=b[ex,]
     # Drop out exons
     exclude=vector("integer",0)
-    for (i in 2:nrow(b)){
+    for (i in 1:nrow(b)){
        TH.ex=which(x[,2]>=b[i,2] & x[,2]<=b[i,3])
        exclude=c(exclude,TH.ex)
     }
@@ -127,14 +129,20 @@ pi.sum=function(x,b){
 #' Calculate Pi_S based on intergenic loci.
 #' This is obtained by excluding all exonic loci.
 #' @export
-Pi_S.par=function(TH,exon.all,cores=15){
+Pi_S.par=function(TH,exon.all,nSNP=NA,cores=15){
   message("Calculating Pi_s - parallel")
   TH.split=split(TH,TH[,1])
   exon.split=split(exon.all,exon.all[,1])
+  exon.split=exon.split[names(TH.split)]
   # calculate neutral pi. If SNP is missing, assume diversity to be zero.
-  contig.pi=parallel::mcmapply(pi.sum,TH.split,exon.split,mc.cores=cores)
-
-  res=list(Pi=sum(unlist(contig.pi["sum.theta",]))/sum(unlist(contig.pi["N.neutral",])),chrom.sum=contig.pi["sum.theta",],chrom.N=contig.pi["N.neutral",])
+  contig.pi=parallel::mcmapply(pi.sum,TH.split,exon.split,mc.cores=min(cores,length(TH.split)))
+  if (is.na(nSNP)){
+    res=list(Pi=sum(unlist(contig.pi["sum.theta",]))/sum(unlist(contig.pi["N.neutral",])),chrom.sum=contig.pi["sum.theta",],chrom.N=contig.pi["N.neutral",])
+     message("The number of called nucleotides is not known - now using the range of called SNPs minus exon length.")
+     message("This assumes that all uncalled positions are monomorphic (pi=0).")
+  }else{
+    res=list(Pi=sum(unlist(contig.pi["sum.theta",]))/nSNP,chrom.sum=contig.pi["sum.theta",],chrom.N=contig.pi["N.neutral",])
+  }
   return(res)
 }
 
