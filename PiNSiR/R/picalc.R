@@ -74,9 +74,11 @@ Pi_N.par=function(TH, exon.sel, exon.mut,nSNP=NA,cores=15){
   message("Calculating Pi_N - parallel")
   TH.split=split(TH,TH[,1])
   exon.mut.list=split(exon.mut,exon.mut[,1])
-  exon.mut.list=exon.mut.list[names(TH.split)]
   exon.sel.list=split(exon.sel,exon.sel[,1])
-  exon.sel.list=exon.sel.list[names(TH.split)]
+  sel.contigs=intersect(names(TH.split),names(exon.sel.list))
+  TH.split=TH.split[sel.contigs]
+  exon.mut.list=exon.mut.list[sel.contigs]
+  exon.sel.list=exon.sel.list[sel.contigs]
   contig.pi=parallel::mcmapply(contig.Pin,TH.split,exon.sel.list,exon.mut.list,mc.cores=min(cores,length(TH.split)))
   if (is.na(nSNP)){
      res=list(Pi=sum(unlist(contig.pi["sum.theta",]))/sum(unlist(contig.pi["N",])),chrom.sum=contig.pi["sum.theta",],chrom.N=contig.pi["N",])
@@ -133,7 +135,9 @@ Pi_S.par=function(TH,exon.all,nSNP=NA,cores=15){
   message("Calculating Pi_s - parallel")
   TH.split=split(TH,TH[,1])
   exon.split=split(exon.all,exon.all[,1])
-  exon.split=exon.split[names(TH.split)]
+  sel.contigs=intersect(names(TH.split),names(exon.split))
+  TH.split=TH.split[sel.contigs]
+  exon.split=exon.split[sel.contigs]
   # calculate neutral pi. If SNP is missing, assume diversity to be zero.
   contig.pi=parallel::mcmapply(pi.sum,TH.split,exon.split,mc.cores=min(cores,length(TH.split)))
   if (is.na(nSNP)){
