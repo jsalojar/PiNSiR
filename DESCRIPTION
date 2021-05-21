@@ -1,0 +1,20 @@
+Package: PiNSiR
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Jarkko",
+           family = "Salojarvi",
+           role = c("aut", "cre"),
+           email = "jarkko@ntu.edu.sg",
+           comment = c(ORCID = "0000-0002-4096-6278"))
+Description: Parallel Pi_N, Pi_S calculation in R.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to
+    pick a license
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports:
+	parallel (>= 3.6.0),
+	seqinr   (>= 3.6-1)
+	
