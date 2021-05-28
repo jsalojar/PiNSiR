@@ -42,7 +42,9 @@ file with coordinates for deleterious positions.
 -Filter the VCF file to include only variant positions and remove the indels, 
  because ANGSD doesn't support them. For the same reason you also need to remove deletion characters "\*"
  (it's not pretty but I eventually ended up removing them with sed 's\\,\*\\\\g'). 
+ 
 -Run SnpEff to get the SNP impact predictions.
+
 -Get the positions with high or moderate impact, you only need the coordinates:
 
 zcat myvcf.gz | grep "HIGH\\|MODERATE" |  awk '{print $1"\t"$2}' > HIGH_MODERATE.coord 
