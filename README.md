@@ -45,7 +45,7 @@ file with coordinates for deleterious positions.
 -Run SnpEff to get the SNP impact predictions.
 -Get the positions with high or moderate impact, you only need the coordinates:
 
-zcat myvcf.gz | grep "HIGH\|MODERATE" |  awk '{print $1"\t"$2}' > HIGH_MODERATE.coord 
+zcat myvcf.gz | grep "HIGH\\|MODERATE" |  awk '{print $1"\t"$2}' > HIGH_MODERATE.coord 
 
 -This step needs to be done only once for the whole VCF. 
 
