@@ -1,8 +1,14 @@
 # PiNSiR
 
-This protocol has been developed for calculating Pi_n and Pi_s values from SNPs called using GATK pipeline. 
-*** NOTE: The code is still very much experimental, but I'm determined to improve it with time... ***
+This protocol has been developed for calculating Pi_n and Pi_s values from SNPs called using GATK pipeline.
 
+***NOTE:The code is still very much experimental, but I'm determined to improve it with time.***
+
+Required software:
+ 1. GATK for SNP calling
+ 2. Installation of ANGSD, versions supporting vcf-pl input are recommended, here I've used v0.933 available through conda.
+ 3. snpEff v4.3t
+ 
 The R code for Pi_n and Pi_s calculations requires three files:
    1. A VCF file with SNP calls also from monomorphic sites.
    2. A file with coordinates of deleterious SNPs.
@@ -18,12 +24,10 @@ Getting each of the files, step by step:
    
    GATK3.x: --includeNonVariantSites
    
--After getting the VCF, carry out filtering. You will need to do it in two stages,
- the second one is in protocol step 2. In stage one, you will prepare a
- vcf file containing all good quality positions, also monomorphic ones -
- this file is used to assess the total number of called sites
- (=genome coverage). To do this, apply only filters according to the coverage
- and SNP call quality. Don't include filters involving heterozygosity
+-After getting the VCF, carry out filtering. You will need to do it in two stages.
+ In stage one, you will prepare a vcf file containing all good quality positions, also monomorphic ones. 
+ This file is used to assess the total number of called sites (=genome coverage). To do this, apply only 
+ filters according to the coverage and SNP call quality. Don't include filters involving heterozygosity
  (you'll just drop out the monomorphic positions). 
  
  Instead of using the VCF containing all positions, it is also possible to work with "normal" 
@@ -33,11 +37,11 @@ Getting each of the files, step by step:
  zero, because the code assumes zero diversity in all non-reported positions.
 
 2. A VCF file with SNP annotations from SnpEff, use this to get a text
-file with coordinates for deleterious poisitions.
+file with coordinates for deleterious positions.
 
--Filter the VCF file to include only variant positions. You need to remobve the indels, 
- because ANGSD doesn't support them. You also need to remove deletions characters "*"
- from the vcf for the same reason (it's not pretty but I eventually ended up removing them with sed).  
+-Filter the VCF file to include only variant positions and remove the indels, 
+ because ANGSD doesn't support them. For the same reason you also need to remove deletion characters "*"
+ (it's not pretty but I eventually ended up removing them with sed). 
 -Run SnpEff to get the SNP impact predictions.
 -Get the positions with high or moderate impact, you only need the coordinates:
 
@@ -46,8 +50,9 @@ zcat myvcf.gz | grep "HIGH\|MODERATE" |  awk '{print $1"\t"$2}' > HIGH_MODERATE.
 -This step needs to be done only once for the whole VCF. 
 
 3. Prepare a (gzipped) file of theta values computed with ANGSD,
-contains site-wise pi. NOTE: It is highly recommended to use ANGSD for
-this, the vcftools has this option but it doesn't use genotype
+contains site-wise pi. 
+
+NOTE: It is highly recommended to use ANGSD for pi calculations, the vcftools has this option but it doesn't use genotype
 likelihoods as ANGSD.
 
 An alternative is PIXY
@@ -77,24 +82,22 @@ realSFS saf2theta angsd.out.saf.idx -sfs angsd.out.saf.sfs -outname angsd.out.th
 
 thetaStat print angsd.out.theta.thetas.idx > angsd.out.theta.thetas.txt
 
-To save space you can zip it:
-
-pigz angsd.out.theta.thetas.txt
+To save space you can zip it.
 
 Now we can finally do the calculations!
 
-4. To get an accurate calculation of Pi_N values, you need to find out which 
-gene models are good quality. I wrote a filter.hq.genes function to do this, 
+4. To get an accurate calculation of Pi_N values, we first need to find out which 
+gene models are of good quality. I wrote a filter.hq.genes function to do this, 
 it tests that the combined exon length is divisible with three and whether the 
 protein starts with a methionine. To find these high quality gene models you 
 will need a gff file with gene predictions and a peptide fasta file of the 
-predicted genes 
-(will explore whether it's necessary to have the fasta - if not this
+predicted genes. 
+(will explore whether it's necessary to have the fasta - if not this,
 then we still need the genome fasta and translation to proteins in
-R. For now, you can use for example gffread to produce a peptide
+R which will take more time. For now, you can use for example gffread to produce a peptide
 fasta file from gff3 and genome sequence.)
 
-5. For the actual calculations there are two functions: Pi_N.par and Pi_S.par
+5. For the actual calculations there are two functions: Pi_N.par and Pi_S.par (par for parallel)
 
 Example usage:
 
@@ -103,13 +106,17 @@ library(PiNSiR)
 #1. Get HQ gene models
 
 gff.file="my.genes.gff3"
+
 peptide.fasta="my.protein.faa"
+
 gene.coord=filter.hq.genes(gff.file,peptide.fasta)
 
 #Get SNP positions with high and moderate effect
+
 zerofold.pos=read.delim("snpEff.HIGH_MODERATE.coord",header=F,as.is=T)
 
 #Get site-wise theta - ANGSD needs to be run for each population separately
+
 TH=read.delim("myvcf.mygroup.theta.thetas.txt.gz",as.is=T)
 
 #Calculate Pi_N
