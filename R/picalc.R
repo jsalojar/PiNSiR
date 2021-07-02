@@ -28,7 +28,6 @@ folds.0=function(gff){
      }else{
        all.0fold=rbind(all.0fold,df.0fold)
      }
-     message(i)
   }
   return(data.frame(zero.fold=all.0fold))
 }     
