@@ -118,15 +118,7 @@ zerofold.pos=read.delim("snpEff.HIGH_MODERATE.coord",header=F,as.is=T)
 TH=read.delim("myvcf.mygroup.theta.thetas.txt.gz",as.is=T)
 
 #Calculate Pi_N
-#Pi_N
-#nSNP=read.table("myvcf.filtered.all.exons.mygroup.snp.count")[,1]*2/3
-#Pi_0=Pi_N.par(TH,gene.coord$HQ,zerofold.pos,nSNP)
-
 Pi_0=Pi_N.par(TH,gene.coord$HQ,zerofold.pos)
 
 #Calculate Pi_S
-#Pi_S
-#nSNP=read.table("myvcf.filtered.all.intergenic.mygroup.snp.count")[,1]
-#Pi_int=Pi_S.par(TH,gene.coord$ALL,nSNP)
-
 Pi_int=Pi_S.par(TH,gene.coord$ALL)
