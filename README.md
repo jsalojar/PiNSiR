@@ -118,7 +118,9 @@ zerofold.pos=read.delim("snpEff.HIGH_MODERATE.coord",header=F,as.is=T)
 TH=read.delim("myvcf.mygroup.theta.thetas.txt.gz",as.is=T)
 
 #Calculate Pi_N
+
 Pi_0=Pi_N.par(TH,gene.coord$HQ,zerofold.pos)
 
 #Calculate Pi_S
+
 Pi_int=Pi_S.par(TH,gene.coord$ALL)
