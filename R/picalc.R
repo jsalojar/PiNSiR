@@ -1,4 +1,4 @@
-filter.ninth=function(x,ID="Parent"){
+filter.ninth=function(x,ID){
   idvec=vector("character",length(x))
   for (i in 1:length(x)){
     y=strsplit(x[i],";")[[1]]
@@ -8,6 +8,11 @@ filter.ninth=function(x,ID="Parent"){
   return(idvec)
 }
 
+#' Identify zero-fold degenerate positions (ie non-synonymous sites) from the gene models.
+#' @param gff.file The input gff3 file with gene models. Recommended input: high quality gene models from filter.hq.genes
+#' @return A data frame containing coordinates of non-synonymous positions.
+#' 
+#' @export
 folds.0=function(gff){
   genes=unique(gff[,4])
   for (i in 1:length(genes)){
@@ -32,6 +37,12 @@ folds.0=function(gff){
   return(data.frame(zero.fold=all.0fold))
 }     
 
+#' Identify four-fold degenerate positions (4dtv) from the gene models.
+#' @param gff.file The input gff3 file with gene models. Recommended input: high quality gene models from filter.hq.genes
+#' @param peptide.fasta Path to the input fasta file with protein sequences of the gene models.
+#' @return A data frame containing coordinates of 4dtv sites.
+#' 
+#' @export
 folds.4=function(gff,peptide.fasta){
   fourfold=c("V","S","P","T","A","G")
   #read peptide fasta
@@ -66,14 +77,26 @@ folds.4=function(gff,peptide.fasta){
   return(four.fold=all.4dtv)
 }     
 
+#' Filter high quality genes
+#'
+#' This function selects high quality genes from the set of annotated genes in a given gff3 file.
+#' It checks that the gene length is divisible by three (so that codons are intact) and that the
+#' translated protein starts with a methionine. 
+#'
+#'
+#' @param gff.file Path to the input gff3 file with gene models.
+#' @param peptide.fasta Path to the input fasta file with protein sequences of the gene models.
+#' @param bed Logical, whether to return coordinates in a bed format (True; 0-based) or gff3 coordinates (False, default; starts from 1).
+#' @param gene.identifier The unique identifier for matching exons with gene models in the gff3 file. Default is "Parent"
+#' @return A list with two items: HQ - high quality gene models and ALL - all gene models. Each list item is a reduced gff3 file.
 #' @export
-filter.hq.genes=function(gff.file,peptide.fasta,bed=F){
+filter.hq.genes=function(gff.file,peptide.fasta,bed=F,gene.identifier="Parent"){
 
   #read in gff
   gff=read.delim(gff.file,comment.char="#",header=F,as.is=T)
   gff=gff[gff[,3]=="exon",c(1,4,5,9,7)]
   #Prepare a gff file with exons, 4th column is the parent gene ID.
-  gff[,4]=filter.ninth(gff[,4])
+  gff[,4]=filter.ninth(gff[,4],gene.identifier)
   # split according to gene ID
   gff.split=split(gff,gff[,4])
 
@@ -87,13 +110,6 @@ filter.hq.genes=function(gff.file,peptide.fasta,bed=F){
   gene.OK=which(sapply(gff.split,function(x) sum(x[,3]-x[,2]+1)%%3)==0)
   #Whole protein is OK - both checks passed
   prot.OK=intersect(names(pep.OK),names(gene.OK))
-
-  # In case we want to get a more accurate estimate, look at codons to define N nonsyn positions
-  # Not yet implemented
-  #nuc=read.fasta("/data2/jtsaloja/Lychee/Assembly/Latest/HiC_Correct_Final.40Xhic_gmap.cds",seqtype="DNA")
-  #nuc.OK=nuc[prot.OK]
-  #nuc.codons=sapply(nuc.OK,splitseq)
-  #codon.table=table(unlist(nuc.codons))
 
   #High quality gene models.
   hq=gff[gff[,4] %in% prot.OK,]
@@ -133,7 +149,14 @@ contig.Pin=function(TH,exs,ex.mut,datatype){
    return(list(sum.theta=th.sum,N=N.nonsy))
 }
 
-#' Calculate Pi_N for loci with a high impact or moderate impact mutation
+#' Calculate Pi_N for loci with a high impact or moderate impact mutation using parallel computation
+#' @param TH Site-wise theta calculated using ANGSD
+#' @param exon.sel Selected gene models
+#' @param exon.mut Coordinates of the non-synonymous positions.
+#' @param nSNP If given, divides the total Pi with the given number of SNPs. 
+#' @param datatype "full" assumes that all positions are called Pi is a mean of observed values, "SNP" assumes only variant positions and the Pi is divided by the total number of non-synonymous positions in the selected gene models.
+#' @param cores Number of cores for parallel computation
+#' @return a list with Pi, chromosome-wise cumulative sums and numbers of SNPs.
 #' @export
 Pi_N.par=function(TH, exon.sel, exon.mut,nSNP=NA,datatype="full",cores=15){
   message("Calculating Pi_N - parallel")
@@ -195,6 +218,12 @@ pi.sum=function(x,b){
 
 #' Calculate Pi_S based on intergenic loci.
 #' This is obtained by excluding all exonic loci.
+#' @param TH Site-wise theta calculated using ANGSD
+#' @param exon.all Coordinates of all gene models
+#' @param nSNP If given, divides the total Pi with the given number of SNPs. 
+#' @param cores Number of cores for parallel computation
+#' @return a list with Pi from intergenic regions, chromosome-wise cumulative sums and numbers of SNPs.
+
 #' @export
 Pi_S.par=function(TH,exon.all,nSNP=NA,cores=15){
   message("Calculating Pi_s - parallel")
@@ -215,7 +244,7 @@ Pi_S.par=function(TH,exon.all,nSNP=NA,cores=15){
   return(res)
 }
 
-
+#' Non-parallel Pi_S based on intergenic loci.
 Pi_S=function(TH.split,coord){
   coord.split=split(coord,coord[,1])
   message("Calculating Pi_s")

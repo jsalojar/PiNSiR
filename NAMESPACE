@@ -3,3 +3,5 @@
 export(Pi_N.par)
 export(Pi_S.par)
 export(filter.hq.genes)
+export(folds.0)
+export(folds.4)

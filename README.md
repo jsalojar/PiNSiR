@@ -1,6 +1,9 @@
 # PiNSiR
 
-This protocol has been developed for calculating Pi_n and Pi_s values from SNPs called using GATK pipeline.
+This protocol has been developed for calculating Pi_n and Pi_s values from SNPs called using GATK pipeline. The code was developed for
+
+G. Hu, J. Feng, X. Xiang, J. Wang, J. Salojärvi, C. Liu, Z. Wu et al. "Two divergent haplotypes from a highly heterozygous lychee genome point to independent domestication events for early and late-maturing cultivars", Accepted in principle to Nature Genetics.
+
 
 ***NOTE:The code is still very much experimental, but I'm determined to improve it with time.***
 
@@ -13,6 +16,8 @@ The R code for Pi_n and Pi_s calculations requires three files:
    1. A VCF file with SNP calls also from monomorphic sites.
    2. A file with coordinates of deleterious SNPs.
    3. A (gzipped) file of theta values computed with Angsd, contains site-wise pi.
+
+This code takes in the site-wise pi values calculated with ANGSD and lists of non-synonymous/synonymous/integenic positions and calculates a pi_n or pi_s from those positions in parallel. Originally the positions were obtained from snpEff but the code contains also functions for identifying four-fold degenerate positions based on gene model gff3 file (folds.4) and zero-fold degenerate positions (folds.0). However, the latter ones were not used in the original calculations. 
 
 Getting each of the files, step by step:
 
@@ -39,10 +44,6 @@ Getting each of the files, step by step:
 2. A VCF file with SNP annotations from SnpEff, use this to get a text
 file with coordinates for deleterious positions.
 
--Filter the VCF file to include only variant positions and remove the indels, 
- because ANGSD doesn't support them. For the same reason you also need to remove deletion characters "\*"
- (it's not pretty but I eventually ended up removing them with sed 's\\,\*\\\\g'). 
- 
 -Run SnpEff to get the SNP impact predictions.
 
 -Get the positions with high or moderate impact, you only need the coordinates:
@@ -52,18 +53,13 @@ zcat myvcf.gz | grep "HIGH\\|MODERATE" |  awk '{print $1"\t"$2}' > HIGH_MODERATE
 -This step needs to be done only once for the whole VCF. 
 
 3. Prepare a (gzipped) file of theta values computed with ANGSD,
-contains site-wise pi. 
-
-NOTE: It is highly recommended to use ANGSD for pi calculations, the vcftools has this option but it doesn't use genotype
+contains site-wise pi. It is highly recommended to use ANGSD for pi calculations, the vcftools also has this functionality but it doesn't use genotype
 likelihoods as ANGSD.
 
-An alternative is PIXY
-(https://www.biorxiv.org/content/10.1101/2020.06.27.175091v1.full) but
-I haven't yet tried this out. One more option is to calculate these
-values inside R (to be implemented later).
+To get ANGSD working with VCFs, you need to filter the VCF file to include only variant positions and remove the indels, because ANGSD doesn't support them. For the same reason you also need to remove deletion characters "\*"
+ (It's not pretty but I eventually ended up removing them with sed 's\\,\*\\\\g'). Getting ANGSD to work with VCF files is tricky, and that's why I've also included functions that can work around this and use normal ANGSD pipeline starting from bam files. In that case you can skip the snpEff and used folds.0 and folds.4 to obtain 0-fold and 4-fold degenerate positions, respectively. 
 
-For best results you need to have an ancestral genome to get an
-unfolded sfs.
+For best results you need to have an ancestral genome to get an unfolded sfs.
 
 How to make ancestral state calls (easy way):
 
@@ -89,8 +85,8 @@ To save space you can zip it.
 Now we can finally do the calculations!
 
 4. To get an accurate calculation of Pi_N values, we first need to find out which 
-gene models are of good quality. I wrote a filter.hq.genes function to do this, 
-it tests that the combined exon length is divisible with three and whether the 
+gene models are of good quality. The filter.hq.genes function identifies them.
+It tests that the combined exon length is divisible with three and checks that the 
 protein starts with a methionine. To find these high quality gene models you 
 will need a gff file with gene predictions and a peptide fasta file of the 
 predicted genes. 

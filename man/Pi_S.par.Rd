@@ -5,7 +5,19 @@
 \title{Calculate Pi_S based on intergenic loci.
 This is obtained by excluding all exonic loci.}
 \usage{
-Pi_S.par(TH, exon.all, cores = 15)
+Pi_S.par(TH, exon.all, nSNP = NA, cores = 15)
+}
+\arguments{
+\item{TH}{Site-wise theta calculated using ANGSD}
+
+\item{exon.all}{Coordinates of all gene models}
+
+\item{nSNP}{If given, divides the total Pi with the given number of SNPs.}
+
+\item{cores}{Number of cores for parallel computation}
+}
+\value{
+a list with Pi from intergenic regions, chromosome-wise cumulative sums and numbers of SNPs.
 }
 \description{
 Calculate Pi_S based on intergenic loci.
