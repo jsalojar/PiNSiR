@@ -36,6 +36,30 @@ folds.0=function(gff){
   }
   return(data.frame(zero.fold=all.0fold))
 }     
+ 
+
+get.1st2nd.codon=function(gff1){
+  exo=gff1[,3]-gff1[,2]+1
+  if (gff1[1,5]=="-"){
+     posvec=rep(c(3,2,1),length.out=sum(exo))
+  }else{
+     posvec=rep(c(1,2,3),length.out=sum(exo))
+  }
+  coordvec=c()
+  for (j in 1:nrow(gff1))
+     coordvec=c(coordvec,gff1[j,2]:gff1[j,3])
+  zero.fold=coordvec[posvec==1 | posvec==2]
+  df.0fold=data.frame(Chr=gff1[1,1],pos=zero.fold,stringsAsFactors=F)
+  return(df.0fold)
+}
+
+folds.0.par=function(gff,cores=2){
+  genes=unique(gff[,4])
+  genes.split=split(gff,gff[,4])
+  codon.list=parallel::mcmapply(get.1st2nd.codon,genes.split,mc.cores=min(cores,length(genes.split)),SIMPLIFY=F)
+  codon.df=plyr::rbind.fill(codon.list)
+  return(codon.df)
+}     
 
 #' Identify four-fold degenerate positions (4dtv) from the gene models.
 #' @param gff.file The input gff3 file with gene models. Recommended input: high quality gene models from filter.hq.genes
