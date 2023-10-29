@@ -27,7 +27,7 @@ folds.0=function(gff){
      for (j in 1:nrow(gff1))
         coordvec=c(coordvec,gff1[j,2]:gff1[j,3])
      zero.fold=coordvec[posvec==1 | posvec==2]
-     df.0fold=data.frame(Chr=gff1[1,1],pos=zero.fold)
+     df.0fold=data.frame(Chr=gff1[1,1],pos=zero.fold,ID=gff1[1,4])
      if (i==1){
        all.0fold=df.0fold
      }else{
@@ -49,7 +49,7 @@ get.1st2nd.codon=function(gff1){
   for (j in 1:nrow(gff1))
      coordvec=c(coordvec,gff1[j,2]:gff1[j,3])
   zero.fold=coordvec[posvec==1 | posvec==2]
-  df.0fold=data.frame(Chr=gff1[1,1],pos=zero.fold,stringsAsFactors=F)
+  df.0fold=data.frame(Chr=gff1[1,1],pos=zero.fold,ID=gff1[1,4],stringsAsFactors=F)
   return(df.0fold)
 }
 
@@ -90,7 +90,7 @@ folds.4=function(gff,peptide.fasta){
      #Val (V),Ser (S),Pro (P),Thr (T),Ala (A),Gly (G)
      pepvec=which(pep[[i]] %in% fourfold)
      four.fold=coordvec[protvec %in% pepvec & posvec==3]
-     df.4dtv=data.frame(Chr=gff1[1,1],pos=four.fold)     
+     df.4dtv=data.frame(Chr=gff1[1,1],pos=four.fold,ID=gff1[1,4])     
      if (i==1){
        all.4dtv=df.4dtv
      }else{
@@ -114,11 +114,11 @@ folds.4=function(gff,peptide.fasta){
 #' @param gene.identifier The unique identifier for matching exons with gene models in the gff3 file. Default is "Parent"
 #' @return A list with two items: HQ - high quality gene models and ALL - all gene models. Each list item is a reduced gff3 file.
 #' @export
-filter.hq.genes=function(gff.file,peptide.fasta,bed=F,gene.identifier="Parent"){
+filter.hq.genes=function(gff.file,peptide.fasta,bed=F,region.identifier="exon",gene.identifier="Parent"){
 
   #read in gff
   gff=read.delim(gff.file,comment.char="#",header=F,as.is=T)
-  gff=gff[gff[,3]=="exon",c(1,4,5,9,7)]
+  gff=gff[gff[,3]==region.identifier,c(1,4,5,9,7)]
   #Prepare a gff file with exons, 4th column is the parent gene ID.
   gff[,4]=filter.ninth(gff[,4],gene.identifier)
   # split according to gene ID
